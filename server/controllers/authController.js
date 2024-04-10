@@ -13,6 +13,7 @@ const { isValidVerificationToken } = require('../utils/mail');
 function generateVerificationToken(user) {
     console.log('token');
     const token = jwt.sign({ userId: user._id }, emailSecret,  expiresIn);
+    console.log(token);
     return token;
   }
 const signUp = async(req,res)=>{
@@ -49,15 +50,15 @@ const signUp = async(req,res)=>{
 }
 
 const verifyEmail= async(req, res)=> {
-    const { token } = req.query;
-    const userEmail = req.query.email;
-  
+    const token  = req.params.token;
+    const email= req.params.email;
+    console.log(token);
     if (!isValidVerificationToken(token)) {
       return res.status(400).json({ message: 'Invalid verification token' });
     }
   
     // Find the user by their email (assuming email is the unique identifier)
-    const user = await User.findOne({ email: userEmail });
+    const user = await User.findOne({ email: email });
   
     if (!user) {
       return res.status(400).json({ message: 'User not found' });
@@ -91,7 +92,8 @@ const login = async(req,res)=>{
         }
         if(!user.isVerified){
             const verificationToken = generateVerificationToken(user);
-            sendVerificationEmail(user.email, verificationToken);
+            console.log(verificationToken);
+           await mail.sendVerificationEmail(user.email, verificationToken);
             return res.status(401).json({ message: 'Account not verified. Verification email sent.' });
         }
         const token = jwt.sign({ userId: user._id },jwtSecret, expiresIn);
@@ -104,7 +106,7 @@ const login = async(req,res)=>{
 }
 
 const forgotPassword = async (req, res) => {
-
+    try{
     const { email } = req.body;
 
     const user = await User.findOne({ email });
@@ -113,40 +115,39 @@ const forgotPassword = async (req, res) => {
         throw new Error(`User with email ${email} not found`);
     }
 
-    // Generate a password reset token
-    
-    user.passwordResetToken = resetToken;
-    user.passwordResetExpires = Date.now() + 3600000; // Token valid for 1 hour
-    await user.save();
-
-    // Send the password reset email
-
-    sendPasswordResetEmail(user.email, resetToken)
-
+    await mail.sendPasswordResetEmail(user.email, generateVerificationToken(user));
+    return res.status(200).json({
+        message: "success"
+    })
+}catch(error){
+    console.error(error);
+    return res.status(500).json({message:'Internal Server Error'});
+}
 };
 
 const resetPassword = async (req, res) => {
-try {
-  const { token, newPassword } = req.body;
+    try {
+        const token = req.params.token;
+        const newPassword = req.body.newPassword;
 
-  const user = await User.findOne({ passwordResetToken: token, passwordResetExpires: { $gt: Date.now() } });
+        const decoded = jwt.verify(token, emailSecret);
 
-  if (!user) {
-      throw new Error(`Invalid token or token expired`);
-  }
+        const user = await User.findOne({_id: decoded.userId});
 
-  // Hash the new password
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  user.password = hashedPassword;
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-  await user.save();
+        if (!user) {
+            throw new Error(`Invalid token or token expired`);
+        }
 
-  res.status(200).json({ message: 'Password reset successful' });
-} catch (error) {
-    console.error('Error resetting password:', error);
-    res.status(500).json({ message: 'Error resetting password' });
-}
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(200).json({message: 'Password reset successful'});
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({message: 'Error resetting password'});
+    }
 };
 
 module.exports={

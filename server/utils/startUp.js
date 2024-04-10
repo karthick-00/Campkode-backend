@@ -4,20 +4,21 @@ const bcrypt = require('bcrypt');
 const performStartUp = async()=>{   
     try {
         // Create an admin user
-        const existadmin = await User.findOne({email:"admin@elearning"});
+        const adminEmail='admin@elerning';
+        const existadmin = await User.findOne({adminEmail});
         if(!existadmin){
         const admin = new User({
         name: 'admin',
-        email: 'admin@elerning',
+        email: adminEmail,
         password: 'admin123',
         isVerified: true,
         });
-        }
+        
         const hashedPassword = await bcrypt.hash(admin.password, 10);
         admin.password = hashedPassword;
         await admin.save();
 
-
+    }
     } catch (e) {
        
         console.error(e.message);

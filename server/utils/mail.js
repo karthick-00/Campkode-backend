@@ -25,6 +25,7 @@ const gmail = google.gmail({
 // Create a function to send a verification email
 async function sendVerificationEmail(recipientEmail, verificationToken) {
   try {
+    console.log(CLIENT_ID);
     // Get an access token for the OAuth2 client
     const { token } = await oAuth2Client.getAccessToken();
 
@@ -42,7 +43,7 @@ async function sendVerificationEmail(recipientEmail, verificationToken) {
     });
 
     // Construct the verification link
-    const verificationLink = `http://localhost:3000/verify?token=${verificationToken}`;
+    const verificationLink = `http://localhost:5500/elearning/auth/verify-email${recipientEmail}/${verificationToken}`;
 
     // Set up the email data
     const mailOptions = {
@@ -63,9 +64,10 @@ async function sendVerificationEmail(recipientEmail, verificationToken) {
 
 function isValidVerificationToken(token) {
     // Adjust these values based on your token requirements
+    console.log(token);
     const minLength = 32; // Minimum token length
-    const maxLength = 64; // Maximum token length
-  
+    const maxLength = 124; // Maximum token length
+    
     // Regular expression to match alphanumeric characters
     const alphanumericRegex = /^[a-zA-Z0-9]+$/;
   
@@ -81,13 +83,14 @@ function isValidVerificationToken(token) {
 async function sendPasswordResetEmail(recipientEmail, resetToken) {
   try {
     // Get an access token for the OAuth2 client
+    console.log("sendPasswordrest");
     const { token } = await oAuth2Client.getAccessToken();
   // Send the password reset email
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       type: 'OAuth2',
-      user: mail.USER,
+      user: USER,
       clientId: CLIENT_ID,
       clientSecret: CLIENT_SEC,
       refreshToken: REFRESH_TOKEN,
@@ -95,7 +98,7 @@ async function sendPasswordResetEmail(recipientEmail, resetToken) {
     },
 });
 
-const resetLink = `http://localhost:3000/reset/${resetToken}`;
+const resetLink = `http://localhost:5500/elearning/auth/resetPass/${resetToken}`;
 const mailOptions = {
     from: USER,
     to: recipientEmail,
@@ -103,12 +106,11 @@ const mailOptions = {
     html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`,
 };
 
- await transporter.sendMail(mailOptions);
+const result = await transporter.sendMail(mailOptions);
+console.log('Password reset email sent:', result);
 
-res.status(200).json({ message: 'Password reset email sent successfully' });
 } catch (error) {
 console.error('Error sending password reset email:', error);
-res.status(500).json({ message: 'Error sending password reset email' });
 }
 };
 
