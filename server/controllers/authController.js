@@ -15,7 +15,8 @@ function generateVerificationToken(user) {
     const token = jwt.sign({ userId: user._id }, emailSecret,  expiresIn);
     console.log(token);
     return token;
-  }
+}
+
 const signUp = async(req,res)=>{
     try{
         const{
@@ -50,8 +51,10 @@ const signUp = async(req,res)=>{
 }
 
 const verifyEmail= async(req, res)=> {
+    try{
     const token  = req.params.token;
     const email= req.params.email;
+
     console.log(token);
     if (!isValidVerificationToken(token)) {
       return res.status(400).json({ message: 'Invalid verification token' });
@@ -69,8 +72,12 @@ const verifyEmail= async(req, res)=> {
 
     // Save the changes to the user's document in the database
     await user.save();
-  
-    return res.status(200).json({ message: 'Email verification successful' });
+    
+    return res.redirect('http://localhost:3000/Login');
+}catch(error){
+    console.log('Token verification failed:' ,error);
+    return res.status(400).json({error:'Email Verification failed'})
+}
   }
   
 
@@ -81,10 +88,10 @@ const login = async(req,res)=>{
             email,
             password
         }=req.body;
-        
+      
         const user = await User.findOne({email});
         if(!user){
-            return res.status(401).json({message:'User does not exist'});
+            return res.status(404).json({message:'User does not exist'});
         }
         const isValidPassword = await bcrypt.compare(password,user.password);
         if(!isValidPassword){
@@ -92,7 +99,7 @@ const login = async(req,res)=>{
         }
         if(!user.isVerified){
             const verificationToken = generateVerificationToken(user);
-            console.log(verificationToken);
+           
            await mail.sendVerificationEmail(user.email, verificationToken);
             return res.status(401).json({ message: 'Account not verified. Verification email sent.' });
         }
@@ -117,7 +124,7 @@ const forgotPassword = async (req, res) => {
 
     await mail.sendPasswordResetEmail(user.email, generateVerificationToken(user));
     return res.status(200).json({
-        message: "success"
+        message: "Reset Password link Sent in mail"
     })
 }catch(error){
     console.error(error);
@@ -128,7 +135,7 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
     try {
         const token = req.params.token;
-        const newPassword = req.body.newPassword;
+        const newPassword = req.body.password;
 
         const decoded = jwt.verify(token, emailSecret);
 

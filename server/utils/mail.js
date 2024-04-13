@@ -1,13 +1,13 @@
 const { google } = require('googleapis');
 const nodemailer = require('nodemailer');
 const { OAuth2Client } = require('google-auth-library');
-
+const jwt = require('jsonwebtoken');
 
 CLIENT_ID = process.env.CLIENT_ID;
 CLIENT_SEC = process.env.CLIENT_SEC;
 REFRESH_TOKEN = process.env.REFRESH_TOKEN;
 USER = process.env.USER;
-
+EMAIL_SEC=process.env.SECRET_KEY;
 // Create an OAuth2 client using your client credentials
 const oAuth2Client = new OAuth2Client({
   clientId: CLIENT_ID,
@@ -43,7 +43,7 @@ async function sendVerificationEmail(recipientEmail, verificationToken) {
     });
 
     // Construct the verification link
-    const verificationLink = `http://localhost:5500/elearning/auth/verify-email${recipientEmail}/${verificationToken}`;
+    const verificationLink = `http://localhost:5500/elearning/auth/verify-email/${recipientEmail}/${verificationToken}`;
 
     // Set up the email data
     const mailOptions = {
@@ -64,17 +64,22 @@ async function sendVerificationEmail(recipientEmail, verificationToken) {
 
 function isValidVerificationToken(token) {
     // Adjust these values based on your token requirements
-    console.log(token);
-    const minLength = 32; // Minimum token length
-    const maxLength = 124; // Maximum token length
+    const decoded=jwt.verify(token,EMAIL_SEC);
+    // if(!decoded.userId){
+    //   console.log('Missing UserId');
+    // }
+    // console.log(token);
+    // const minLength = 32; // Minimum token length
+    // const maxLength = 124; // Maximum token length
     
-    // Regular expression to match alphanumeric characters
-    const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+    // // Regular expression to match alphanumeric characters
+    // const alphanumericRegex = /^[a-zA-Z0-9]+$/;
   
     return (
-      token.length >= minLength &&
-      token.length <= maxLength &&
-      alphanumericRegex.test(token)
+      // token.length >= minLength &&
+      // token.length <= maxLength &&
+      // alphanumericRegex.test(token)
+      decoded.userId
     );
   }
 
@@ -98,12 +103,13 @@ async function sendPasswordResetEmail(recipientEmail, resetToken) {
     },
 });
 
-const resetLink = `http://localhost:5500/elearning/auth/resetPass/${resetToken}`;
+// const resetLink = `http://localhost:5500/elearning/auth/resetPass/${resetToken}`;
+const resetLink=`http://localhost:3000/resetPassword/${resetToken}`
 const mailOptions = {
     from: USER,
     to: recipientEmail,
     subject: 'Password Reset',
-    html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`,
+    html: `<p>Click <a href="${resetLink}">here</a> to reset your password for CampKode Learnings.</p>`,
 };
 
 const result = await transporter.sendMail(mailOptions);

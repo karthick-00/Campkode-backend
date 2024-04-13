@@ -24,8 +24,14 @@ connectDB().then(()=>{
 
     app.use('/elearning',limit);
     const authRouter = require('./routes/authRouter');
+    const courseRouter = require('./routes/courseRouter');
+    const userRouter = require('./routes/userRouter');
+    const examRouter = require('./routes/examRouter');
 
     app.use('/elearning/auth',authRouter);
+    app.use('/elearning/courses',courseRouter);
+    app.use('/elearning/users',userRouter);
+    app.use('/elearning/exams',examRouter);
     
     app.get('/',(req,res)=>{
         res.send("App is running..");

@@ -5,7 +5,7 @@ const performStartUp = async()=>{
     try {
         // Create an admin user
         const adminEmail='admin@elerning';
-        const existadmin = await User.findOne({adminEmail});
+        const existadmin = await User.findOne({email:adminEmail});
         if(!existadmin){
         const admin = new User({
         name: 'admin',

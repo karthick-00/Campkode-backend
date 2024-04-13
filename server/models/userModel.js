@@ -14,7 +14,9 @@ const userSchema = new mongoose.Schema({
     profilePic:String,
     idProof:String,
     signature:String,
-    isVerified:Boolean
+    isVerified:Boolean,
+    enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+    completedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }]
 });
 const User = mongoose.model('User', userSchema);
 module.exports = User;
