@@ -9,12 +9,15 @@ const resourcesSchema = new mongoose.Schema({
 const assignmentSchema = new mongoose.Schema({
     title: String,
     questions: [{
-        question: String,
+        description: String,
         options: [String],
-        correctAnswerIndex: Number
+        correctAnswerIndices: [Number], // Allow multiple correct answers
+        answerDescription:String,
+        allowsMultipleSelection: { type: Boolean, default: false }, // Flag to indicate if multiple answers are allowed
+        marks: { type: Number, default: 1 } // Marks for the question, default to 1
     }],
-    deadline:Date
-})
+    deadline: Date
+});
 
 const lectureSchema = new mongoose.Schema({
     url:String
@@ -22,7 +25,7 @@ const lectureSchema = new mongoose.Schema({
 
 const moduleSchema = new mongoose.Schema({
     week:Number,
-    courseId:{type:mongoose.Schema.Types.ObjectId,ref:'Course'},
+    courseId: { type: String, ref: 'Course' },
     resources:[{type: mongoose.Schema.Types.ObjectId,ref:'Resources'}],
     assignment: { type: mongoose.Schema.Types.ObjectId, ref: 'Assignment' },
     lectures: [{type:mongoose.Schema.Types.ObjectId, ref:'Lectures'}],
@@ -30,16 +33,19 @@ const moduleSchema = new mongoose.Schema({
 
 
 const courseSchema = new mongoose.Schema({
+  
+    courseId: { type: String, unique: true },
     title:String,
     instructors: [{ type: String }],
-    duration:String,
+    duration:Number,
     category:String,
     enrollmentStatus:String,
-    syllabus:String,
+    syllabus:Buffer,
     rating: Number,
     modules:[{type:mongoose.Schema.Types.ObjectId,ref:'Modules'}],
     reviews:[{content:String}],
-    enrollmentCount:Number
+    enrollmentCount:Number,
+    
 })
 
 

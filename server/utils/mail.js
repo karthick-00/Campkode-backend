@@ -14,6 +14,7 @@ const oAuth2Client = new OAuth2Client({
   clientSecret: CLIENT_SEC,
   redirectUri: 'https://developers.google.com/oauthplayground',
 });
+
 oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
 // Set up the Gmail API
@@ -25,7 +26,7 @@ const gmail = google.gmail({
 // Create a function to send a verification email
 async function sendVerificationEmail(recipientEmail, verificationToken) {
   try {
-    console.log(CLIENT_ID);
+   
     // Get an access token for the OAuth2 client
     const { token } = await oAuth2Client.getAccessToken();
 
@@ -65,20 +66,7 @@ async function sendVerificationEmail(recipientEmail, verificationToken) {
 function isValidVerificationToken(token) {
     // Adjust these values based on your token requirements
     const decoded=jwt.verify(token,EMAIL_SEC);
-    // if(!decoded.userId){
-    //   console.log('Missing UserId');
-    // }
-    // console.log(token);
-    // const minLength = 32; // Minimum token length
-    // const maxLength = 124; // Maximum token length
-    
-    // // Regular expression to match alphanumeric characters
-    // const alphanumericRegex = /^[a-zA-Z0-9]+$/;
-  
     return (
-      // token.length >= minLength &&
-      // token.length <= maxLength &&
-      // alphanumericRegex.test(token)
       decoded.userId
     );
   }
@@ -120,9 +108,128 @@ console.error('Error sending password reset email:', error);
 }
 };
 
+//week content published mail
+
+async function sendWeekContentPublished(recipientEmail, week, courseName, deadline, course_link, assignment_link) {
+  try {
+    // Get an access token for the OAuth2 client
+ 
+    const { token } = await oAuth2Client.getAccessToken();
+  
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      type: 'OAuth2',
+      user: USER,
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SEC,
+      refreshToken: REFRESH_TOKEN,
+      accessToken: token,
+    },
+});
+
+
+const mailOptions = {
+    from: USER,
+    to: recipientEmail,
+    subject: `${courseName}-Week ${week} Content is Live Now!!`,
+    html: `<p>
+    Dear Students
+    <br>
+
+    The lecture videos for Week ${week} have been uploaded for the course ${courseName}.<br><br> The lectures can be accessed using the following link: ${course_link}<br><br>
+    
+    
+    The other lectures of this week are accessible from the navigation bar to the left. Please remember to login into the website to view contents (if you aren't logged in already).<br><br>
+    
+    
+    Assignment ${week} for Week  ${week} is also released and can be accessed from the following link: ${assignment_link}<br><br>
+    
+    
+    The assignment has to be submitted on or before ${deadline}.<br><br>
+    
+    
+    As we have done so far, please use the discussion forums if you have any questions on this module.<br><br>
+    
+    
+    Note : Please check the due date of the assignments in the announcement and assignment page if you see any mismatch write to us immediately.<br><br>
+    
+    Thanks and Regards,<br><br>
+    
+    --CampKode Learners Team<br><br>
+    
+    </p>`,
+};
+
+const result = await transporter.sendMail(mailOptions);
+console.log('Week content email sent:', result);
+
+} catch (error) {
+console.error('Error sending week content email:', error);
+}
+};
+
+//feedback mail
+
+async function feedbackRemainder(recipientEmail, week, courseName, feedback_link) {
+  try {
+    // Get an access token for the OAuth2 client
+ 
+    const { token } = await oAuth2Client.getAccessToken();
+  
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      type: 'OAuth2',
+      user: USER,
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SEC,
+      refreshToken: REFRESH_TOKEN,
+      accessToken: token,
+    },
+});
+
+
+const mailOptions = {
+    from: USER,
+    to: recipientEmail,
+    subject: `${courseName}-Week ${week} Feedback Form`,
+    html: `<p>
+    Dear Students
+    <br>
+
+    Thank you for enrolling in this CampKode course and we hope you have gone through the contents for this week and also attempted the assignment.<br><br>
+
+We value your feedback and wish to know how you found the videos and the questions asked - whether they were easy, difficult, as per your expectations, etc<br><br>
+
+We shall use this to make the course better and we can also know from the feedback which concepts need more explanation, etc.<br><br>
+
+
+Please do spare some time to give your feedback - comprises just 5 questions - should not take more than a minute, but makes a lot of difference for us as we know what the Learners feel.<br><br>
+
+
+Here is the link to the form: ${feedback_link}<br><br>
+
+    
+    Thanks and Regards,<br><br>
+    
+    --CampKode Learners Team<br><br>
+    
+    </p>`,
+};
+
+const result = await transporter.sendMail(mailOptions);
+console.log('Week content email sent:', result);
+
+} catch (error) {
+console.error('Error sending week content email:', error);
+}
+};
   
 module.exports = {
   sendVerificationEmail,
   isValidVerificationToken,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendWeekContentPublished,
+  feedbackRemainder
 };

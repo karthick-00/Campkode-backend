@@ -11,8 +11,8 @@ const expiresIn = process.env.JWT_EXPIRESIN;
 const { isValidVerificationToken } = require('../utils/mail');
 
 function generateVerificationToken(user) {
-    console.log('token');
-    const token = jwt.sign({ userId: user._id }, emailSecret,  expiresIn);
+ 
+    const token = jwt.sign({ userId: user._id }, emailSecret,  {expiresIn:expiresIn});
     console.log(token);
     return token;
 }
@@ -103,8 +103,21 @@ const login = async(req,res)=>{
            await mail.sendVerificationEmail(user.email, verificationToken);
             return res.status(401).json({ message: 'Account not verified. Verification email sent.' });
         }
-        const token = jwt.sign({ userId: user._id },jwtSecret, expiresIn);
-        res.status(200).json({ token});
+        // console.log(expiresIn);
+        const token = jwt.sign({ userId: user._id },jwtSecret, {expiresIn:expiresIn});
+        const userId = user._id;
+        const cookieOptions = {
+            expires: new Date(Date.now() + (process.env.COOKIE_EXPIRESIN * 60 * 60 * 1000)),
+            httpOnly: true
+        };
+   
+        res.cookie('jwt', token, cookieOptions);
+   
+        
+        res.status(200).json({data:{
+            token,
+            userId
+        } });
     }
     catch(error){
         console.error('Error logging in',error);
@@ -135,7 +148,7 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
     try {
         const token = req.params.token;
-        const newPassword = req.body.password;
+        const {newPassword} = req.body;
 
         const decoded = jwt.verify(token, emailSecret);
 
@@ -144,7 +157,7 @@ const resetPassword = async (req, res) => {
         if (!user) {
             throw new Error(`Invalid token or token expired`);
         }
-
+        console.log(newPassword);
         // Hash the new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
