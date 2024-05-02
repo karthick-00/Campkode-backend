@@ -15,6 +15,7 @@ const addCourse = async(req, res) => {
             enrollmentStatus,
             syllabus,
             modules,
+            image
         } = req.body;
 
         // Create a new course
@@ -26,6 +27,7 @@ const addCourse = async(req, res) => {
             category,
             enrollmentStatus,
             syllabus,
+            image,
             modules: [] // Initialize modules array
         });
 
