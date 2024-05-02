@@ -210,7 +210,20 @@ try{
   
 }
 
-
+const getEnrollmentId = async(req,res)=>{
+    try{
+        const userId=req.params.userId;
+        const courseId = req.params.courseId;
+        const enrollment = await Enrollment.findOne({userId:userId,courseId:courseId});
+        if(!enrollment){
+            return res.status(404).json({message:'Enrollment not found'});
+        }
+        return res.status(200).json(enrollment._id);
+    }catch(error){
+        console.error(error);
+        return res.status(500).json({error:'Internal Server Error'});
+    }
+}
 
 module.exports={
     registerExam,
@@ -219,4 +232,5 @@ module.exports={
     displayRegisteredExam,
     createPayment,
     createHallticket, 
+    getEnrollmentId
 }
